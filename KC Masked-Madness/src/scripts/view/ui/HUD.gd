@@ -14,6 +14,7 @@ const UI = preload("res://src/scripts/view/ui/UIResourceManager.gd")
 @onready var mechanics: HBoxContainer = $Mechanics
 @onready var stats_panel: TextureRect = $StatsPanel
 @onready var stats_container: VBoxContainer = $StatsPanel/StatsContainer
+@onready var center_label: Label = $CenterLabel
 
 # Powerup slots
 var powerup_slots: Array[ColorRect] = []
@@ -22,6 +23,12 @@ var active_powerups_count: int = 0
 
 # Timer for stat updates
 var stats_update_timer: float = 0.0
+# Timer for center label visibility
+var center_label_timer: Timer = null
+# Kill tracking
+var consecutive_kills: int = 0
+var last_kill_time: float = 0.0
+var kill_window: float = 60.0  # Seconds between kills to count as consecutive
 
 func _ready():
 	print("HUD initialized")
@@ -31,6 +38,8 @@ func _ready():
 	setup_stats_display()
 	# Hook signals
 	setup_signals()
+	# Setup center label timer
+	_setup_center_label_timer()
 
 func _process(delta):
 	# Update stats every half second
@@ -188,6 +197,21 @@ func setup_signals():
 	EventBus.hud_level_updated.connect(_on_level_updated)
 	EventBus.powerup_charges_changed.connect(_on_powerup_charges_changed)
 	EventBus.powerup_activated.connect(_on_powerup_activated)
+	EventBus.enemy_died.connect(_on_enemy_killed)
+
+# Setup center label timer
+func _setup_center_label_timer():
+	if center_label:
+		center_label.visible = false  # Hide by default
+	center_label_timer = Timer.new()
+	center_label_timer.one_shot = true
+	center_label_timer.timeout.connect(_on_center_label_timeout)
+	add_child(center_label_timer)
+
+# Hide center label when timer expires
+func _on_center_label_timeout():
+	if center_label:
+		center_label.visible = false
 
 # Make powerup squares
 func _setup_powerup_slots():
@@ -212,6 +236,13 @@ func _on_health_updated(current: int, maximum: int):
 	if health_bar:
 		health_bar.max_value = maximum
 		health_bar.value = current
+	# Update center health label - show and auto-hide after 2s
+	if center_label:
+		center_label.text = "Health: %d / %d" % [current, maximum]
+		center_label.visible = true
+		# Restart timer for 1 seconds
+		if center_label_timer:
+			center_label_timer.start(1.0)
 	# Refresh stats
 	_update_all_stats()
 
@@ -249,3 +280,33 @@ func _on_powerup_activated(duration: float):
 			var tween = create_tween()
 			tween.tween_property(powerup_slots[i], "color", Color.DIM_GRAY, duration)
 			break
+
+# Enemy killed - show kill message
+func _on_enemy_killed(enemy: Node2D, position: Vector2):
+	if center_label:
+		var current_time = Time.get_ticks_msec() / 1000.0
+		
+		# Check if kill is within the window
+		if current_time - last_kill_time <= kill_window:
+			consecutive_kills += 1
+		else:
+			# Too much time passed, reset streak
+			consecutive_kills = 1
+		
+		last_kill_time = current_time
+		
+		# Check for multi-kills
+		if consecutive_kills >= 5:
+			center_label.text = "Penta Kill!"
+			consecutive_kills = 0  # Reset after penta kill
+		elif consecutive_kills >= 4:
+			center_label.text = "Quadra Kill!"
+		elif consecutive_kills >= 3:
+			center_label.text = "Triple Kill!"
+		else:
+			center_label.text = "Eliminated!"
+		
+		center_label.visible = true
+		# Restart timer for 1 seconds
+		if center_label_timer:
+			center_label_timer.start(1.0)
