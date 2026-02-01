@@ -13,7 +13,11 @@ var parent: Node2D
 func _ready():
 	parent = get_parent()
 
-	# Configure Area2D
+	# Configure Area2D collision - detect pickups on layers 1 and 4
+	collision_layer = 1
+	collision_mask = 5  # Binary: 101 = layers 1 and 4 (pickups, weapon_pickups)
+
+	# Configure collision shape
 	var collision_shape = CollisionShape2D.new()
 	var circle_shape = CircleShape2D.new()
 	circle_shape.radius = pickup_range
@@ -24,7 +28,7 @@ func _ready():
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 
-	print("PickupMagnet initialized with range: ", pickup_range)
+	print("PickupMagnet initialized with range: ", pickup_range, " mask: ", collision_mask)
 
 func _process(delta):
 	# Pull in shiny stuff
