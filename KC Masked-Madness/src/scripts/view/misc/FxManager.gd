@@ -1,4 +1,4 @@
-## FxManager script. does game stuff in a simple way.
+## FxManager script. handles visual and audio effects.
 extends Node
 class_name FxManager
 
@@ -9,15 +9,23 @@ class_name FxManager
 @export var sound_effects: Dictionary = {}
 
 var active_particles: Array[Node2D] = []
+var footstep_timer: float = 0.0
+@export var footstep_interval: float = 0.35
+var is_player_moving: bool = false
 
 func _ready():
 	print("FxManager initialized")
-	setup_signals()
 	load_effect_resources()
-
-func setup():
-	print("FxManager setup")
 	setup_signals()
+
+func _process(delta):
+	if is_player_moving:
+		footstep_timer -= delta
+		if footstep_timer <= 0:
+			play_sound("move")
+			footstep_timer = footstep_interval
+	else:
+		footstep_timer = 0 # Reset so it plays immediately when starting to move
 
 func setup_signals():
 	# Connect to EventBus signals for automatic effect triggering
@@ -29,83 +37,172 @@ func setup_signals():
 		EventBus.xp_gem_collected.connect(_on_xp_gem_collected)
 	if not EventBus.player_died.is_connected(_on_player_died):
 		EventBus.player_died.connect(_on_player_died)
+	if not EventBus.weapon_fired.is_connected(_on_weapon_fired):
+		EventBus.weapon_fired.connect(_on_weapon_fired)
+	if not EventBus.player_level_up.is_connected(_on_player_level_up):
+		EventBus.player_level_up.connect(_on_player_level_up)
+	if not EventBus.enemy_damaged.is_connected(_on_enemy_damaged):
+		EventBus.enemy_damaged.connect(_on_enemy_damaged)
+	if not EventBus.game_started.is_connected(_on_game_started):
+		EventBus.game_started.connect(_on_game_started)
+	if not EventBus.powerup_collected.is_connected(_on_powerup_collected):
+		EventBus.powerup_collected.connect(_on_powerup_collected)
+	if not EventBus.player_moved.is_connected(_on_player_moved):
+		EventBus.player_moved.connect(_on_player_moved)
 
 func load_effect_resources():
-	# Load particle scenes and sound effects
-	# This would typically load from resource files
+	# Load particle scenes (placeholders for now)
 	particle_scenes = {
-		"hit_effect": null,  # Would load actual particle scene
+		"hit_effect": null,
 		"explosion": null,
 		"xp_collect": null
 	}
 	
+	# Load sound effects with variations
 	sound_effects = {
-		"hit": null,  # Would load actual audio stream
-		"explosion": null,
-		"xp_collect": null,
-		"weapon_fire": null
+		"shoot": [
+			preload("res://assets/Sounds/shoot-a.ogg"),
+			preload("res://assets/Sounds/shoot-b.ogg"),
+			preload("res://assets/Sounds/shoot-c.ogg"),
+			preload("res://assets/Sounds/shoot-d.ogg"),
+			preload("res://assets/Sounds/shoot-e.ogg"),
+			preload("res://assets/Sounds/shoot-f.ogg"),
+			preload("res://assets/Sounds/shoot-g.ogg"),
+			preload("res://assets/Sounds/shoot-h.ogg")
+		],
+		"explosion": [
+			preload("res://assets/Sounds/explosion-a.ogg"),
+			preload("res://assets/Sounds/explosion-b.ogg"),
+			preload("res://assets/Sounds/explosion-c.ogg")
+		],
+		"xp_collect": [
+			preload("res://assets/Sounds/coin-a.ogg"),
+			preload("res://assets/Sounds/coin-b.ogg"),
+			preload("res://assets/Sounds/coin-c.ogg"),
+			preload("res://assets/Sounds/coin-d.ogg")
+		],
+		"hurt": [
+			preload("res://assets/Sounds/hurt-a.ogg"),
+			preload("res://assets/Sounds/hurt-b.ogg"),
+			preload("res://assets/Sounds/hurt-c.ogg"),
+			preload("res://assets/Sounds/hurt-d.ogg"),
+			preload("res://assets/Sounds/hurt-e.ogg")
+		],
+		"player_death": [
+			preload("res://assets/Sounds/lose-a.ogg"),
+			preload("res://assets/Sounds/lose-b.ogg"),
+			preload("res://assets/Sounds/lose-c.ogg"),
+			preload("res://assets/Sounds/lose-d.ogg")
+		],
+		"level_up": [
+			preload("res://assets/Sounds/select-a.ogg")
+		],
+		"move": [
+			preload("res://assets/Sounds/move-a.ogg"),
+			preload("res://assets/Sounds/move-b.ogg"),
+			preload("res://assets/Sounds/move-c.ogg"),
+			preload("res://assets/Sounds/move-d.ogg")
+		],
+		"jump": [
+			preload("res://assets/Sounds/jump-a.ogg"),
+			preload("res://assets/Sounds/jump-b.ogg"),
+			preload("res://assets/Sounds/jump-c.ogg"),
+			preload("res://assets/Sounds/jump-d.ogg"),
+			preload("res://assets/Sounds/jump-e.ogg"),
+			preload("res://assets/Sounds/jump-f.ogg")
+		],
+		"fall": [
+			preload("res://assets/Sounds/fall-a.ogg"),
+			preload("res://assets/Sounds/fall-b.ogg")
+		],
+		"select": [
+			preload("res://assets/Sounds/select-a.ogg")
+		],
+		"error": [
+			preload("res://assets/Sounds/error-a.ogg"),
+			preload("res://assets/Sounds/error-b.ogg"),
+			preload("res://assets/Sounds/error-c.ogg")
+		]
 	}
 
 func _on_projectile_hit(target: Node2D, _damage: int):
-	# Play hit effect at target position
 	play_hit_effect(target.global_position)
+	play_sound("hurt")
 
-func _on_enemy_died(_enemy: Enemy, position: Vector2):
-	# Play death effect
+func _on_enemy_damaged(_enemy: Node2D, _damage: int):
+	pass
+
+func _on_enemy_died(_enemy: Node2D, position: Vector2):
 	play_explosion_effect(position)
+	play_sound("explosion")
 
 func _on_xp_gem_collected(_amount: int):
-	# Play collection effect
 	play_xp_collect_effect()
+	play_sound("xp_collect")
 
 func _on_player_died():
-	# Play death screen effect
 	play_death_effect()
+	play_sound("player_death")
 
-func play_hit_effect(position: Vector2):
-	print("Playing hit effect at ", position)
-	# In a real implementation, this would spawn a particle effect
-	# var hit_particle = particle_scenes["hit_effect"].instantiate()
-	# hit_particle.global_position = position
-	# get_tree().current_scene.add_child(hit_particle)
+func _on_weapon_fired(_weapon_name: String, _direction: Vector2):
+	play_sound("shoot")
 
-func play_explosion_effect(position: Vector2):
-	print("Playing explosion effect at ", position)
-	# In a real implementation, this would spawn an explosion particle
-	# var explosion = particle_scenes["explosion"].instantiate()
-	# explosion.global_position = position
-	# get_tree().current_scene.add_child(explosion)
+func _on_player_level_up(_new_level: int):
+	play_sound("level_up")
+
+func _on_game_started():
+	play_sound("select")
+
+func _on_powerup_collected(_duration: float):
+	play_sound("select")
+
+func _on_player_moved(_position: Vector2):
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		var player = players[0]
+		if player is CharacterBody2D:
+			is_player_moving = player.velocity.length() > 10.0
+		else:
+			is_player_moving = true
+	else:
+		is_player_moving = false
+
+func play_hit_effect(_position: Vector2):
+	pass
+
+func play_explosion_effect(_position: Vector2):
+	pass
 
 func play_xp_collect_effect():
-	print("Playing XP collect effect")
-	# In a real implementation, this would play a sound and show a visual effect
-	# play_sound("xp_collect")
+	pass
 
 func play_death_effect():
-	print("Playing death effect")
-	# In a real implementation, this would show a death screen effect
-	# play_sound("player_death")
+	pass
 
 func play_sound(sound_name: String):
 	if sound_name in sound_effects:
-		print("Playing sound: ", sound_name)
-		# In a real implementation, this would play the actual sound
-		# var audio_player = AudioStreamPlayer.new()
-		# audio_player.stream = sound_effects[sound_name]
-		# add_child(audio_player)
-		# audio_player.play()
+		var variations = sound_effects[sound_name]
+		if variations.size() > 0:
+			var stream = variations[randi() % variations.size()]
+			if stream:
+				var audio_player = AudioStreamPlayer.new()
+				audio_player.stream = stream
+				audio_player.bus = "SFX"
+				audio_player.pitch_scale = randf_range(0.9, 1.1)
+				add_child(audio_player)
+				audio_player.finished.connect(audio_player.queue_free)
+				audio_player.play()
 
 func play_particle_effect(effect_name: String, position: Vector2):
 	if effect_name in particle_scenes:
-		print("Playing particle effect: ", effect_name, " at ", position)
-		# In a real implementation, this would spawn the particle effect
-		# var particle = particle_scenes[effect_name].instantiate()
-		# particle.global_position = position
-		# get_tree().current_scene.add_child(particle)
-		# active_particles.append(particle)
+		var scene = particle_scenes[effect_name]
+		if scene:
+			var particle = scene.instantiate()
+			particle.global_position = position
+			get_tree().current_scene.add_child(particle)
+			active_particles.append(particle)
 
 func cleanup_particles():
-	# Clean up finished particle effects
 	for particle in active_particles:
 		if particle and is_instance_valid(particle):
 			if not particle.emitting:
@@ -113,8 +210,6 @@ func cleanup_particles():
 				active_particles.erase(particle)
 
 func screen_shake(intensity: float, duration: float):
-	print("Screen shake: intensity=", intensity, " duration=", duration)
-	# In a real implementation, this would shake the camera
-	# var camera = get_viewport().get_camera_2d()
-	# if camera:
-	#     camera.add_trauma(intensity, duration)
+	var camera = get_viewport().get_camera_2d()
+	if camera and camera.has_method("add_trauma"):
+		camera.add_trauma(intensity, duration)
