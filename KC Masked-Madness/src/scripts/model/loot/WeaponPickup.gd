@@ -31,7 +31,8 @@ func collect(player: Node2D):
 	_is_collected = true
 	# Replace player's weapon (single weapon system)
 	if player.weapon_manager:
-		player.weapon_manager.weapons = [weapon_name]
+		var new_weapons: Array[String] = [weapon_name]
+		player.weapon_manager.weapons = new_weapons
 		player.weapon_manager.current_weapon_index = 0
 		player.weapon_manager.setup_weapons()
 		player.weapon_manager.update_weapon_data(weapon_name)
