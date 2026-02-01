@@ -31,6 +31,8 @@ func _on_game_over(final_score: int):
 
 func show_game_over(score: int):
 	visible = true
+	# Show mouse cursor for UI interaction
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if score_label:
 		score_label.text = "Final Score: " + str(score)
 	print("Game over screen shown with score: ", score)
