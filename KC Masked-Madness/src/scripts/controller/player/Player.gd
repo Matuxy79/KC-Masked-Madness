@@ -23,12 +23,9 @@ var speed_multiplier: float = 1.0
 var powerup_charges: int = 0
 
 # Power mode flags
-var has_power_choice: bool = false
-var pending_power_duration: float = 0.0
 var power_mode_active: bool = false
 var power_mode_timer: float = 0.0
 var saved_basic_weapon_index: int = 0
-var next_power_weapon: String = "laser_beam"
 
 # My parts
 var movement_component: MovementComponent
@@ -111,18 +108,6 @@ func _physics_process(delta):
 			weapon_manager.start_firing()
 		if Input.is_action_just_released("fire"):
 			weapon_manager.stop_firing()
-
-		# Handle weapon swap input (number keys 1-5)
-		if Input.is_action_just_pressed("weapon_1"):
-			weapon_manager.switch_weapon(0)
-		elif Input.is_action_just_pressed("weapon_2"):
-			weapon_manager.switch_weapon(1)
-		elif Input.is_action_just_pressed("weapon_3"):
-			weapon_manager.switch_weapon(2)
-		elif Input.is_action_just_pressed("weapon_4"):
-			weapon_manager.switch_weapon(3)
-		elif Input.is_action_just_pressed("weapon_5"):
-			weapon_manager.switch_weapon(4)
 	
 	# Update temporary power mode timer
 	_update_power_mode(delta)
@@ -317,7 +302,6 @@ func activate_power_mode(powerup_name: String, duration: float):
 	weapon_manager.apply_powerup(powerup_data)
 	power_mode_active = true
 	power_mode_timer = max(duration, 0.1)
-	has_power_choice = false
 	EventBus.powerup_activated.emit(duration)
 	print("[Player.activate_power_mode] Power mode started: ", weapon_name, " for ", power_mode_timer, " seconds. Charges left: ", powerup_charges)
 

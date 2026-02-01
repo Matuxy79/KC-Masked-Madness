@@ -6,7 +6,7 @@ extends Node
 var projectile_pool: Array[Node2D] = []
 var enemy_pool: Array[Node2D] = []
 var xp_gem_pool: Array[Node2D] = []
-# PowerUp pool removed (deprecated)
+var weapon_pickup_pool: Array[Node2D] = []
 
 var max_pool_size: int = 50
 
@@ -105,6 +105,36 @@ func create_new_xp_gem() -> Node2D:
 	var gem = preload("res://src/scenes/XPGem.tscn").instantiate()
 	return gem
 
+# Weapon pickup pooling
+func get_weapon_pickup() -> Node2D:
+	while weapon_pickup_pool.size() > 0:
+		var pickup = weapon_pickup_pool.pop_back()
+		if pickup == null or not is_instance_valid(pickup):
+			continue
+		if pickup.has_method("reset"):
+			pickup.reset()
+		pickup.visible = true
+		pickup.process_mode = Node.PROCESS_MODE_INHERIT
+		return pickup
+	return create_new_weapon_pickup()
+
+func return_weapon_pickup(pickup: Node2D):
+	if pickup == null or not is_instance_valid(pickup):
+		return
+	if weapon_pickup_pool.size() < max_pool_size:
+		detach_from_parent(pickup)
+		if pickup.has_method("reset"):
+			pickup.reset()
+		pickup.visible = false
+		pickup.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+		weapon_pickup_pool.append(pickup)
+	else:
+		pickup.queue_free()
+
+func create_new_weapon_pickup() -> Node2D:
+	var pickup = preload("res://src/scenes/WeaponPickup.tscn").instantiate()
+	return pickup
+
 # Pool management
 func clear_all_pools():
 	for projectile in projectile_pool:
@@ -113,10 +143,13 @@ func clear_all_pools():
 		enemy.queue_free()
 	for gem in xp_gem_pool:
 		gem.queue_free()
-	
+	for pickup in weapon_pickup_pool:
+		pickup.queue_free()
+
 	projectile_pool.clear()
 	enemy_pool.clear()
 	xp_gem_pool.clear()
+	weapon_pickup_pool.clear()
 
 func detach_from_parent(node: Node):
 	var parent = node.get_parent()

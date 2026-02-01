@@ -213,19 +213,43 @@ func _on_enemy_died(enemy: Enemy, position: Vector2):
 	# Remove from active enemies list
 	if enemy in active_enemies:
 		active_enemies.erase(enemy)
-	
+
 	# Spawn XP gem at death location
 	spawn_xp_gem(position)
+
+	# Spawn weapon pickup at death location
+	spawn_weapon_pickup(position)
 
 func spawn_xp_gem(position: Vector2):
 	var xp_gem = Pools.get_xp_gem()
 	if not xp_gem:
 		return
-	
+
 	xp_gem.global_position = position
 	get_tree().current_scene.call_deferred("add_child", xp_gem)
-	
+
 	print("Spawned XP gem at ", position)
+
+# Available weapons for random drops
+const DROPPABLE_WEAPONS: Array[String] = [
+	"pistol", "revolver", "smg", "assault_rifle", "shotgun",
+	"sniper_rifle", "minigun", "burst_rifle"
+]
+
+func spawn_weapon_pickup(position: Vector2):
+	var pickup = Pools.get_weapon_pickup()
+	if not pickup:
+		return
+
+	# Pick a random weapon
+	var weapon_name = Rng.random_choice(DROPPABLE_WEAPONS)
+	if pickup.has_method("setup"):
+		pickup.setup(weapon_name)
+
+	pickup.global_position = position + Vector2(Rng.randf_range(-10, 10), Rng.randf_range(-10, 10))
+	get_tree().current_scene.call_deferred("add_child", pickup)
+
+	print("Spawned weapon pickup: ", weapon_name, " at ", position)
 
 func _on_game_started():
 	# Reset spawn timer and wave system

@@ -68,17 +68,6 @@ func _setup_input_map():
 	if not InputMap.action_has_event("fire", space_ev):
 		InputMap.action_add_event("fire", space_ev)
 
-	# Weapon swap keys 1-5
-	var weapon_keys = [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5]
-	for i in range(weapon_keys.size()):
-		var action_name = "weapon_" + str(i + 1)
-		if not InputMap.has_action(action_name):
-			InputMap.add_action(action_name)
-		var key_ev = InputEventKey.new()
-		key_ev.keycode = weapon_keys[i]
-		if not InputMap.action_has_event(action_name, key_ev):
-			InputMap.action_add_event(action_name, key_ev)
-
 func setup_weapons():
 	# Initialize fire timers
 	for weapon_name in weapons:

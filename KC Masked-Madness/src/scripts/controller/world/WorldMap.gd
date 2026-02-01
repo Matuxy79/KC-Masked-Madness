@@ -51,8 +51,21 @@ func _ready():
 	setup_terrain_generator()
 	load_ground_textures()
 	load_mixed_ground_tiles()
-	# load_decor_tiles removed - using ObjectBuilder
 	find_player()
+	setup_signals()
+
+func setup_signals():
+	# Connect to enemy death for terrain shifting
+	if not EventBus.enemy_died.is_connected(_on_enemy_died_terrain_shift):
+		EventBus.enemy_died.connect(_on_enemy_died_terrain_shift)
+
+func _on_enemy_died_terrain_shift(_enemy: Node2D, _position: Vector2):
+	# Shift terrain biome every 5 kills for visible effect
+	if terrain_gen:
+		terrain_gen.shift_biome()
+		# Reload current room's ground tiles to show new biome
+		if terrain_gen.biome_shift % 5 == 0:
+			reload_current_room_ground()
 
 func setup_layers():
 	ground_layer = Node2D.new()
@@ -297,8 +310,7 @@ func unload_room(room_pos: Vector2i):
 	if room_data.has("objects"):
 		for obj in room_data["objects"]:
 			if obj and is_instance_valid(obj):
-				if obj.has_node("DecorAnchor"):
-					unregister_decor_position(obj.get_node("DecorAnchor").global_position)
+				unregister_decor_position(obj.global_position)
 				obj.queue_free()
 
 	loaded_rooms.erase(room_pos)
@@ -372,17 +384,11 @@ func spawn_object(object_type: String, position: Vector2) -> Node2D:
 	obj.z_index = 0 # Relative to ObjectLayer
 	
 	object_layer.add_child(obj)
-	
-	# Register anchor for enemies
-	if obj.has_node("DecorAnchor"):
-		# Use deferred because global_position might not be ready if not in tree? 
-		# It is in tree (add_child called).
-		# We register the global position of the anchor node.
-		# But since we just added it, position is local.
-		# obj.position is set relative to object_layer.
-		# object_layer is at (0,0) world usually.
-		register_decor_position(obj.position) 
-	
+
+	# Register object position for enemies to walk to
+	# Use global_position since object is now in scene tree
+	register_decor_position(obj.global_position)
+
 	return obj
 
 func get_random_room_position(room_rect: Rect2, rng: RandomNumberGenerator) -> Vector2:
@@ -442,3 +448,52 @@ func get_available_decor_count() -> int:
 		if available:
 			count += 1
 	return count
+
+# Reload ground tiles for current room to show biome change
+func reload_current_room_ground():
+	if not initialized:
+		return
+
+	print("Reloading ground tiles for biome shift effect...")
+
+	# Reload all loaded rooms' ground tiles
+	for room_pos in loaded_rooms.keys():
+		var room_data = loaded_rooms[room_pos]
+
+		# Free old ground sprites
+		if room_data.has("ground"):
+			for sprite in room_data["ground"]:
+				if sprite and is_instance_valid(sprite):
+					sprite.queue_free()
+
+		# Regenerate ground sprites with new biome
+		var ground_sprites: Array[Sprite2D] = []
+		var base_tile = room_pos * CHUNK_SIZE
+
+		for x in range(CHUNK_SIZE):
+			for y in range(CHUNK_SIZE):
+				var tile_pos = base_tile + Vector2i(x, y)
+				var world_pos = Vector2(tile_pos) * TILE_SIZE
+				var sprite_pos = world_pos + Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
+
+				var terrain_data = terrain_gen.get_biome_and_position(tile_pos, TILE_SIZE)
+				var biome_name = terrain_data["biome_name"]
+				var position_name = terrain_data["position"]
+
+				var texture: Texture2D = null
+				if biome_name == "mixed_ground":
+					texture = get_mixed_ground_tile(tile_pos)
+				else:
+					var texture_key = get_texture_key(biome_name, position_name)
+					texture = ground_textures.get(texture_key)
+
+				if texture:
+					var sprite = Sprite2D.new()
+					sprite.texture = texture
+					sprite.position = sprite_pos
+					ground_layer.add_child(sprite)
+					ground_sprites.append(sprite)
+
+		room_data["ground"] = ground_sprites
+
+	print("Ground tiles reloaded!")

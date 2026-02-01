@@ -13,6 +13,9 @@ const TILE_SIZE := 16
 # Seed for deterministic generation
 var world_seed: int = 0
 
+# Biome shift offset - increments on enemy kills to shift terrain
+var biome_shift: int = 0
+
 # 9-grid position names for autotile
 const POSITIONS_9GRID = [
 	"top-left", "top-middle", "top-right",
@@ -38,7 +41,8 @@ func hash_chunk(chunk_x: int, chunk_y: int) -> int:
 # Get biome for a chunk (room-based selection)
 func get_room_biome(chunk_pos: Vector2i) -> Biome:
 	var hash_val = hash_chunk(chunk_pos.x, chunk_pos.y)
-	var roll = hash_val % 100
+	# Apply biome shift to roll for dynamic terrain changes
+	var roll = (hash_val + biome_shift * 17) % 100
 
 	# 50% arid, 20% mixed, 15% green, 15% purple
 	if roll < 50:
@@ -49,6 +53,11 @@ func get_room_biome(chunk_pos: Vector2i) -> Biome:
 		return Biome.GREEN_LUSH
 	else:
 		return Biome.PURPLE_BLOOM
+
+# Shift biomes - called when enemies die for visual terrain change
+func shift_biome():
+	biome_shift += 1
+	print("Biome shifted! New offset: ", biome_shift)
 
 # Convert tile position to chunk position
 func tile_to_chunk(tile_pos: Vector2i) -> Vector2i:

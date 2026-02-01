@@ -34,6 +34,8 @@ func _process(delta):
 			attract_xp_gem(area, delta)
 		elif area.is_in_group("powerup"):
 			attract_powerup(area, delta)
+		elif area.is_in_group("weapon_pickups"):
+			attract_weapon_pickup(area, delta)
 
 func _on_area_entered(area: Area2D):
 	if area.is_in_group("xp_gem"):
@@ -120,9 +122,21 @@ func collect_powerup(powerup: Node2D):
 	
 	print("[PickupMagnet.collect_powerup] Collected PowerUp")
 
+func attract_weapon_pickup(pickup: Node2D, delta: float):
+	if not pickup or not is_instance_valid(pickup):
+		return
+
+	var direction = (parent.global_position - pickup.global_position).normalized()
+	var distance = parent.global_position.distance_to(pickup.global_position)
+
+	# Move pickup towards player (weapon pickups collect on contact via body_entered)
+	if distance > collection_range:
+		var move_distance = attraction_speed * delta
+		pickup.global_position += direction * move_distance
+
 func set_pickup_range(new_range: float):
 	pickup_range = new_range
-	
+
 	# Update collision shape
 	var collision_shape = get_child(0) as CollisionShape2D
 	if collision_shape and collision_shape.shape is CircleShape2D:

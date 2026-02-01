@@ -191,12 +191,31 @@ func take_damage(amount: int):
 	current_health -= amount
 	EventBus.enemy_damaged.emit(self, amount)
 
-	# When shot, walk to the next closest decor item
-	if current_state != State.DYING:
-		seek_new_decor()
-
 	if current_health <= 0:
 		die()
+		return
+
+	# When shot (but not killed), swap type and walk to new decor
+	if current_state != State.DYING:
+		swap_to_random_type()
+		seek_new_decor()
+
+func swap_to_random_type():
+	# Get all available types except current
+	var available_types = ANIMAL_SPRITES.keys()
+	available_types.erase(enemy_type)
+	if available_types.is_empty():
+		return
+
+	# Pick a random new type
+	var new_type = Rng.random_choice(available_types)
+
+	# Preserve health percentage when swapping
+	var health_percent = float(current_health) / float(max_health)
+	apply_enemy_type(new_type)
+	current_health = max(1, int(max_health * health_percent))
+
+	print("Enemy swapped to: ", new_type, " with health: ", current_health, "/", max_health)
 
 func seek_new_decor():
 	# Release current decor claim if we have one
