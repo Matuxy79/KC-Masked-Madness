@@ -190,13 +190,38 @@ func exit_aggressive_state():
 func take_damage(amount: int):
 	current_health -= amount
 	EventBus.enemy_damaged.emit(self, amount)
-	
-	# If hit, even if not seen, become aggressive (optional but good)
-	if current_state != State.AGGRESSIVE:
-		enter_aggressive_state()
-		
+
+	# When shot, walk to the next closest decor item
+	if current_state != State.DYING:
+		seek_new_decor()
+
 	if current_health <= 0:
 		die()
+
+func seek_new_decor():
+	# Release current decor claim if we have one
+	if world_map and claimed_decor_pos != Vector2.INF:
+		world_map.release_decor(claimed_decor_pos)
+		claimed_decor_pos = Vector2.INF
+
+	# Stop firing if we were aggressive
+	if weapon_manager:
+		weapon_manager.stop_firing()
+	if swear_bubble:
+		swear_bubble.visible = false
+
+	# Find and claim new decor to walk to
+	if not world_map:
+		find_world_map()
+	if world_map:
+		var nearest_decor = world_map.get_nearest_available_decor(global_position)
+		if nearest_decor != Vector2.INF:
+			if world_map.claim_decor(nearest_decor):
+				claimed_decor_pos = nearest_decor
+				current_state = State.WALK_TO_DECOR
+				return
+	# Fallback to idle if no decor available
+	current_state = State.IDLE
 
 func die():
 	if current_state == State.DYING: return
