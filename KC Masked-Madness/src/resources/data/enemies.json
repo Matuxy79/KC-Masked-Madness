@@ -1,0 +1,64 @@
+{
+	"enemies": {
+		"elephant": {
+			"name": "Elephant",
+			"health": 100,
+			"speed": 60,
+			"xp_reward": 75
+		},
+		"hippo": {
+			"name": "Hippo",
+			"health": 90,
+			"speed": 70,
+			"xp_reward": 75
+		},
+		"giraffe": {
+			"name": "Giraffe",
+			"health": 80,
+			"speed": 80,
+			"xp_reward": 75
+		},
+		"panda": {
+			"name": "Panda",
+			"health": 60,
+			"speed": 90,
+			"xp_reward": 50
+		},
+		"pig": {
+			"name": "Pig",
+			"health": 55,
+			"speed": 95,
+			"xp_reward": 50
+		},
+		"monkey": {
+			"name": "Monkey",
+			"health": 50,
+			"speed": 110,
+			"xp_reward": 50
+		},
+		"rabbit": {
+			"name": "Rabbit",
+			"health": 35,
+			"speed": 130,
+			"xp_reward": 25
+		},
+		"snake": {
+			"name": "Snake",
+			"health": 30,
+			"speed": 120,
+			"xp_reward": 25
+		},
+		"parrot": {
+			"name": "Parrot",
+			"health": 25,
+			"speed": 140,
+			"xp_reward": 25
+		},
+		"penguin": {
+			"name": "Penguin",
+			"health": 30,
+			"speed": 100,
+			"xp_reward": 25
+		}
+	}
+}

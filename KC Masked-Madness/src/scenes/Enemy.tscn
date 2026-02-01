@@ -1,0 +1,44 @@
+[gd_scene load_steps=8 format=3 uid="uid://e8x8x8x8x8x8"]
+
+[ext_resource type="Script" uid="uid://b18v5n8jsga2r" path="res://src/scripts/model/enemy/Enemy.gd" id="1_0x8x8"]
+[ext_resource type="Texture2D" uid="uid://c6wyuktgfu0li" path="res://assets/sprites/enemies/enemy.png" id="2_rr1jw"]
+[ext_resource type="Script" uid="uid://c5fatw6vs3lvy" path="res://src/scripts/controller/player/WeaponManager.gd" id="3_0x8x8"]
+[ext_resource type="Texture2D" uid="uid://b8x8x8x8x8x8" path="res://assets/sprites/ui/Interface/effects/swear-bubble.png" id="4_0x8x8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy"]
+size = Vector2(32, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 150.0
+
+[node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
+script = ExtResource("1_0x8x8")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_rr1jw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_enemy")
+
+[node name="AimPivot" type="Node2D" parent="."]
+
+[node name="WeaponSocket" type="Sprite2D" parent="AimPivot"]
+position = Vector2(10, 0)
+
+[node name="Muzzle" type="Marker2D" parent="AimPivot/WeaponSocket"]
+position = Vector2(12, 0)
+
+[node name="DetectionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_detection")
+
+[node name="WeaponManager" type="Node" parent="."]
+script = ExtResource("3_0x8x8")
+
+[node name="SwearBubble" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -25)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_0x8x8")

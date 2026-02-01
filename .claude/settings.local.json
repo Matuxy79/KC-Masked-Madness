@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(dir /b \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\FAST-TRACK\\\\Outer-Worlds\\\\game-jam\\\\cmpt-3066-SUBMISSION\\\\new-game-project\\\\assets\\\\sprites\\\\ui\\\\objects\")",
+      "Bash(del \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\FAST-TRACK\\\\Outer-Worlds\\\\game-jam\\\\cmpt-3066-SUBMISSION\\\\new-game-project\\\\assets\\\\sprites\\\\ui\\\\objects\\\\chainlink-fence-build\\\\hard-chainlink-fence-row3-col3-duplicate.png\")"
+    ]
+  }
+}
