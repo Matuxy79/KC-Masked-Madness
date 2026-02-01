@@ -102,7 +102,7 @@ func _physics_process(delta):
 	if movement_component:
 		# Move based on input
 		movement_component.process_movement(delta)
-	
+
 	if weapon_manager:
 		# Process weapon logic (timers, burst, etc.)
 		weapon_manager.process_weapons(delta)
@@ -111,6 +111,18 @@ func _physics_process(delta):
 			weapon_manager.start_firing()
 		if Input.is_action_just_released("fire"):
 			weapon_manager.stop_firing()
+
+		# Handle weapon swap input (number keys 1-5)
+		if Input.is_action_just_pressed("weapon_1"):
+			weapon_manager.switch_weapon(0)
+		elif Input.is_action_just_pressed("weapon_2"):
+			weapon_manager.switch_weapon(1)
+		elif Input.is_action_just_pressed("weapon_3"):
+			weapon_manager.switch_weapon(2)
+		elif Input.is_action_just_pressed("weapon_4"):
+			weapon_manager.switch_weapon(3)
+		elif Input.is_action_just_pressed("weapon_5"):
+			weapon_manager.switch_weapon(4)
 	
 	# Update temporary power mode timer
 	_update_power_mode(delta)
