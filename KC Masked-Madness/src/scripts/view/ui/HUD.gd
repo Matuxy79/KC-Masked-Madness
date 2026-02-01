@@ -6,6 +6,7 @@ class_name HUD
 
 # UI helper
 const UI = preload("res://src/scripts/view/ui/UIResourceManager.gd")
+const Minimap = preload("res://src/scripts/view/ui/Minimap.gd")
 
 # UI bits
 @onready var health_bar: ProgressBar = $HealthBar
@@ -15,6 +16,9 @@ const UI = preload("res://src/scripts/view/ui/UIResourceManager.gd")
 @onready var stats_panel: TextureRect = $StatsPanel
 @onready var stats_container: VBoxContainer = $StatsPanel/StatsContainer
 @onready var center_label: Label = $CenterLabel
+
+# Minimap
+var minimap: Control = null
 
 # Powerup slots
 var powerup_slots: Array[ColorRect] = []
@@ -40,6 +44,8 @@ func _ready():
 	setup_signals()
 	# Setup center label timer
 	_setup_center_label_timer()
+	# Setup minimap
+	_setup_minimap()
 
 func _process(delta):
 	# Update stats every half second
@@ -212,6 +218,12 @@ func _setup_center_label_timer():
 func _on_center_label_timeout():
 	if center_label:
 		center_label.visible = false
+
+# Setup minimap in top right corner
+func _setup_minimap():
+	minimap = Minimap.new()
+	add_child(minimap)
+	print("Minimap created and added to HUD")
 
 # Make powerup squares
 func _setup_powerup_slots():
