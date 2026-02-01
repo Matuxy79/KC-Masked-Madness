@@ -4,15 +4,16 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/Weapons/pistol-starter.png" id="2_weapon"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_weapon"]
-radius = 16.0
+radius = 12.0
 
 [node name="WeaponPickup" type="Area2D" groups=["weapon_pickups"]]
+z_index = 50
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("1_weapon")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(2, 2)
+scale = Vector2(0.8, 0.8)
 texture = ExtResource("2_weapon")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
